@@ -37,23 +37,18 @@ class install_mysql {
   class { 'mysql': }
 
   class { 'mysql::server':
-    config_hash => { 'root_password' => '' }
+    config_hash => { 'root_password' => 'root', 'port' => '8889' }
   }
 
-  database { $ar_databases:
-    ensure  => present,
-    charset => 'utf8',
-    require => Class['mysql::server']
-  }
-
-  database_user { 'rails@localhost':
+  
+  database_user { 'root@%':
     ensure  => present,
     require => Class['mysql::server']
   }
 
-  database_grant { ['rails@localhost/activerecord_unittest', 'rails@localhost/activerecord_unittest2', 'rails@localhost/inexistent_activerecord_unittest']:
+  database_grant { 'root@%':
     privileges => ['all'],
-    require    => Database_user['rails@localhost']
+    require    => Database_user['root@%']
   }
 
   package { 'libmysqlclient15-dev':
@@ -62,40 +57,7 @@ class install_mysql {
 }
 class { 'install_mysql': }
 
-# --- PostgreSQL ---------------------------------------------------------------
 
-class install_postgres {
-  class { 'postgresql': }
-
-  class { 'postgresql::server': }
-
-  pg_database { $ar_databases:
-    ensure   => present,
-    encoding => 'UTF8',
-    require  => Class['postgresql::server']
-  }
-
-  pg_user { 'rails':
-    ensure  => present,
-    require => Class['postgresql::server']
-  }
-
-  pg_user { 'vagrant':
-    ensure    => present,
-    superuser => true,
-    require   => Class['postgresql::server']
-  }
-
-  package { 'libpq-dev':
-    ensure => installed
-  }
-
-  package { 'postgresql-contrib':
-    ensure  => installed,
-    require => Class['postgresql::server'],
-  }
-}
-class { 'install_postgres': }
 
 # --- Memcached ----------------------------------------------------------------
 
